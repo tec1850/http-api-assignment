@@ -6,7 +6,79 @@
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
+    //function to handle our xhr response
+    const handleResponse = (xhr) => {
+      //grab the content section
+      const content = document.querySelector("#content");
+      const type = xhr.getResponseHeader('content-type');
+      
+      //check the xhr status code and handle accordingly
+      switch(xhr.status) {
+        case 200: //success
+          content.innerHTML = `<b>Success</b>`;
+          break;
+        case 400: //bad request 
+          content.innerHTML = `<b>Bad Request</b>`;
+          break;
+        case 401: // unauthorized
+          content.innerHTML = `<b>Unauthorized</b>`;
+          break;
+        case 403: // forbidden
+          content.innerHTML = `<b>Forbidden</b>`;
+          break;
+        case 404: // not found (requested resource does not exist)
+          content.innerHTML = `<b>Resource Not Found</b>`;
+          break;
+        case 500: // internal error
+          content.innerHTML = `<b>Internal Error</b>`;
+          break;
+        case 501: // not implemented
+          content.innerHTML = `<b>Not Implemented</b>`;
+          break;
+        default: //default other errors we are not handling in this example
+          content.innerHTML = `Error code not implemented by client.`;
+          break;
+      }
+      
+      
+      if (type === "application/json") {
+        const obj = JSON.parse(xhr.response);
+        
+        content.innerHTML += `<p>Message: ${obj.message}</p>`
+      } else if (type === "text/xml") {
+        const message = xhr.responseXML.querySelector("message").textContent;
+        
+        const p = document.createElement('p');
+        p.textContent = `Message: ${message}`;
+        content.appendChild(p);
+      }
+    };
+    
+    const requestUpdate = (e, pages, typeSel) => {
+      const url = pages.value;
+      const type = typeSel.value;
+      
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
 
+      xhr.setRequestHeader('Accept', type);
+		
+	  xhr.onload = () => handleResponse(xhr);
+      
+      xhr.send();
+    };
+
+    const init = () => {
+      const pages = document.querySelector('#page');
+	  const button = document.querySelector('#send');
+	  const typeSel = document.querySelector('#type');
+      
+      const getPages = (e) => requestUpdate(e, pages, typeSel);
+      
+      button.addEventListener('click', getPages);
+    };
+
+    window.onload = init;
   </script>
 </head>
 <body>
